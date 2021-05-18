@@ -1,0 +1,85 @@
+﻿using System;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using EmployeeManager.Localization;
+using Volo.Abp.Account.Localization;
+using Volo.Abp.UI.Navigation;
+using Volo.Abp.Users;
+
+namespace EmployeeManager.Blazor.Menus
+{
+    public class EmployeeManagerMenuContributor : IMenuContributor
+    {
+        private readonly IConfiguration _configuration;
+
+        public EmployeeManagerMenuContributor(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+
+        public async Task ConfigureMenuAsync(MenuConfigurationContext context)
+        {
+            if (context.Menu.Name == StandardMenus.Main)
+            {
+                await ConfigureMainMenuAsync(context);
+            }
+            else if (context.Menu.Name == StandardMenus.User)
+            {
+                await ConfigureUserMenuAsync(context);
+            }
+        }
+
+        private Task ConfigureMainMenuAsync(MenuConfigurationContext context)
+        {
+            var l = context.GetLocalizer<EmployeeManagerResource>();
+
+            context.Menu.Items.Insert(
+                0,
+                new ApplicationMenuItem(
+                    EmployeeManagerMenus.Home,
+                    l["Menu:Home"],
+                    "/",
+                    icon: "fas fa-home"
+                )
+            );
+
+            context.Menu.AddItem(
+                new ApplicationMenuItem(
+                    "EmployeeManagement",
+                    l["Menu:EmployeeManagement"],
+                    icon: "fas fa-users"
+                ).AddItem(
+                    new ApplicationMenuItem(
+                        "EmployeeManagement.TimeOffRequests",
+                        l["Menu:TimeOffRequests"],
+                        url: "/TimeOffRequests"
+                    )
+                )
+            );
+
+            return Task.CompletedTask;
+        }
+
+        private Task ConfigureUserMenuAsync(MenuConfigurationContext context)
+        {
+            var accountStringLocalizer = context.GetLocalizer<AccountResource>();
+            var currentUser = context.ServiceProvider.GetRequiredService<ICurrentUser>();
+
+            var identityServerUrl = _configuration["AuthServer:Authority"] ?? "";
+
+            if (currentUser.IsAuthenticated)
+            {
+                context.Menu.AddItem(new ApplicationMenuItem(
+                    "Account.Manage",
+                    accountStringLocalizer["ManageYourProfile"],
+                    $"{identityServerUrl.EnsureEndsWith('/')}Account/Manage?returnUrl={_configuration["App:SelfUrl"]}",
+                    icon: "fa fa-cog",
+                    order: 1000,
+                    null));
+            }
+
+            return Task.CompletedTask;
+        }
+    }
+}

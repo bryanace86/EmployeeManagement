@@ -1,0 +1,212 @@
+﻿@page "/TimeOffRequests"
+@attribute [Authorize(EmployeeManagerPermissions.TimeOffRequests.Default)]
+@using EmployeeManager.Permissions
+@using Microsoft.AspNetCore.Authorization
+@using Volo.Abp.Application.Dtos
+@using EmployeeManager.TimeOffRequests
+@using EmployeeManager.Localization
+@using Microsoft.Extensions.Localization
+@using Volo.Abp.AspNetCore.Components.Web
+@inject IStringLocalizer<EmployeeManagerResource> L
+@inject AbpBlazorMessageLocalizerHelper<EmployeeManagerResource> LH
+@inherits AbpCrudPageBase<ITimeOffRequestAppService, TimeOffRequestDto, Guid, PagedAndSortedResultRequestDto, CreateUpdateTimeOffRequestDto>
+
+<Card>
+    <CardHeader>
+        <Row Class="justify-content-between">
+            <Column ColumnSize="ColumnSize.IsAuto">
+                <h2>@L["TimeOffRequests"]</h2>
+            </Column>
+            <Column ColumnSize="ColumnSize.IsAuto">
+                <Button Color="Color.Primary"
+                        Clicked="OpenCreateModalAsync">
+                    @L["NewTimeOffRequest"]
+                </Button>
+            </Column>
+        </Row>
+    </CardHeader>
+    <CardBody>
+
+        <DataGrid TItem="TimeOffRequestDto"
+                  Data="Entities"
+                  ReadData="OnDataGridReadAsync"
+                  CurrentPage="CurrentPage"
+                  TotalItems="TotalCount"
+                  ShowPager="true"
+                  PageSize="PageSize">
+            <DataGridColumns>
+                <DataGridEntityActionsColumn TItem="TimeOffRequestDto" @ref="@EntityActionsColumn">
+                    <DisplayTemplate>
+                        <EntityActions TItem="TimeOffRequestDto" EntityActionsColumn="@EntityActionsColumn">
+                            <EntityAction TItem="TimeOffRequestDto"
+                                          Text="@L["Edit"]"
+                                          Clicked="() => OpenEditModalAsync(context)" />
+                            <EntityAction TItem="TimeOffRequestDto"
+                                          Text="@L["Delete"]"
+                                          Clicked="() => DeleteEntityAsync(context)"
+                                          ConfirmationMessage="()=>GetDeleteConfirmationMessage(context)" />
+                        </EntityActions>
+                    </DisplayTemplate>
+                </DataGridEntityActionsColumn>
+
+                <DataGridColumn TItem="TimeOffRequestDto"
+                                Field="@nameof(TimeOffRequestDto.UserName)"
+                                Caption="@L["Employee"]"></DataGridColumn>
+
+                <DataGridColumn TItem="TimeOffRequestDto"
+                                Field="@nameof(TimeOffRequestDto.StartDateTime)"
+                                Caption="@L["StartDateTime"]"></DataGridColumn>
+                <DataGridColumn TItem="TimeOffRequestDto"
+                                Field="@nameof(TimeOffRequestDto.EndDateTime)"
+                                Caption="@L["EndDateTime"]">
+                </DataGridColumn>
+                <DataGridColumn TItem="TimeOffRequestDto"
+                                Field="@nameof(TimeOffRequestDto.Status)"
+                                Caption="@L["TimeOffRequestStatus"]">
+                    <DisplayTemplate>
+                        @L[$"Enum:TimeOffRequestStatus:{(int)context.Status}"]
+                    </DisplayTemplate>
+                </DataGridColumn>
+                <DataGridColumn TItem="TimeOffRequestDto"
+                                Field="@nameof(TimeOffRequestDto.Note)"
+                                Caption="@L["Note"]">
+                </DataGridColumn>
+            </DataGridColumns>
+
+        </DataGrid>
+
+    </CardBody>
+</Card>
+
+
+
+<Modal @ref="@CreateModal">
+    <ModalBackdrop />
+    <ModalContent IsCentered="true">
+        <Form>
+            <ModalHeader>
+                <ModalTitle>@L["NewTimeOffRequest"]</ModalTitle>
+                <CloseButton Clicked="CloseCreateModalAsync" />
+            </ModalHeader>
+            <ModalBody>
+                <Validations @ref="@CreateValidationsRef" Model="@NewEntity" ValidateOnLoad="false">
+
+                    <Field>
+                        <FieldLabel>@L["StartDateTime"]</FieldLabel>
+                        <DateEdit TValue="DateTime" @bind-Date="@NewEntity.StartDateTime" />
+                    </Field>
+                    <Field>
+                        <FieldLabel>@L["EndDateTime"]</FieldLabel>
+                        <DateEdit TValue="DateTime" @bind-Date="@NewEntity.EndDateTime" />
+                    </Field>
+                    <Field>
+                        <FieldLabel>@L["Note"]</FieldLabel>
+                        <TextEdit @bind-Text="NewEntity.Note" />
+                    </Field>
+                </Validations>
+            </ModalBody>
+            <ModalFooter>
+                <Button Color="Color.Secondary"
+                        Clicked="CloseCreateModalAsync">
+                    @L["Cancel"]
+                </Button>
+                <Button Color="Color.Primary"
+                        Type="@ButtonType.Submit"
+                        PreventDefaultOnSubmit="true"
+                        Clicked="CreateEntityAsync">
+                    @L["Save"]
+                </Button>
+            </ModalFooter>
+        </Form>
+    </ModalContent>
+</Modal>
+
+
+<Modal @ref="@EditModal">
+    <ModalBackdrop />
+    <ModalContent IsCentered="true">
+        <Form>
+            <ModalHeader>
+                <ModalTitle>@L["EditTimeOffRequest"]</ModalTitle>
+                <CloseButton Clicked="CloseEditModalAsync" />
+            </ModalHeader>
+            <ModalBody>
+                <Validations @ref="@EditValidationsRef" Model="@NewEntity" ValidateOnLoad="false">
+
+                    <Field>
+                        <FieldLabel>@L["StartDateTime"]</FieldLabel>
+                        <DateEdit TValue="DateTime" @bind-Date="EditingEntity.StartDateTime" />
+                    </Field>
+                    <Field>
+                        <FieldLabel>@L["EndDateTime"]</FieldLabel>
+                        <DateEdit TValue="DateTime" @bind-Date="EditingEntity.EndDateTime" />
+                    </Field>
+                    <Field>
+                        <FieldLabel>@L["Note"]</FieldLabel>
+                        <TextEdit @bind-Text="@EditingEntity.Note" />
+                    </Field>
+                    @if (CanApprove)
+                    {
+                    <Field>
+                        <FieldLabel>@L["Status"]</FieldLabel>
+                        <Select TValue="TimeOffRequestStatus" @bind-SelectedValue="@EditingEntity.Status">
+                            @foreach (int statusValue in Enum.GetValues(typeof(TimeOffRequestStatus)))
+                            {
+                                <SelectItem TValue="TimeOffRequestStatus" Value="@((TimeOffRequestStatus) statusValue)">
+                                    @L[$"Enum:TimeOffRequestStatus:{statusValue}"]
+                                </SelectItem>
+                            }
+                        </Select>
+                    </Field>
+                    }
+                </Validations>
+            </ModalBody>
+            <ModalFooter>
+                <Button Color="Color.Secondary"
+                        Clicked="CloseEditModalAsync">
+                    @L["Cancel"]
+                </Button>
+                <Button Color="Color.Primary"
+                        Type="@ButtonType.Submit"
+                        PreventDefaultOnSubmit="true"
+                        Clicked="UpdateEntityAsync">
+                    @L["Save"]
+                </Button>
+            </ModalFooter>
+        </Form>
+    </ModalContent>
+</Modal>
+
+
+@code {
+    public string UpdateAnyPolicyName { get; }
+    public string UpdateOwnPolicyName { get; }
+    public string DeleteAnyPolicyName { get; }
+    public string DeleteOwnPolicyName { get; }
+    public string ApprovePolicyName { get; }
+
+    public bool CanApprove { get; set; }
+
+    public TimeOffRequests() // Constructor
+    {
+        CreatePolicyName = EmployeeManagerPermissions.TimeOffRequests.Create;
+        UpdateAnyPolicyName = EmployeeManagerPermissions.TimeOffRequests.EditAny;
+        UpdateOwnPolicyName = EmployeeManagerPermissions.TimeOffRequests.EditOwn;
+        DeleteAnyPolicyName = EmployeeManagerPermissions.TimeOffRequests.DeleteAny;
+        DeleteOwnPolicyName = EmployeeManagerPermissions.TimeOffRequests.DeleteOwn;
+        ApprovePolicyName = EmployeeManagerPermissions.TimeOffRequests.Approve;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await SetPermissionsAsync();
+    }
+
+    private async Task SetPermissionsAsync()
+    {
+        CanApprove = await AuthorizationService
+        .IsGrantedAsync(ApprovePolicyName);
+
+    }
+
+}

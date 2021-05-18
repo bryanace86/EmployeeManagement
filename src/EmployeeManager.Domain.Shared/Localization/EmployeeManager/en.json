@@ -1,0 +1,22 @@
+{
+  "culture": "en",
+  "texts": {
+    "Menu:Home": "Home",
+    "Welcome": "Welcome",
+    "LongWelcomeMessage": "Welcome to the application. This is a startup project based on the ABP framework. For more information, visit abp.io.",
+    "Permission:EmployeeManagment": "Employee Managment",
+    "Permission:TimeOffRequestPermissions": "Time Off Requests Permissions",
+    "Permission:TimeOffRequests": "Time Off Requests",
+    "Permission:TimeOffRequests.Create": "Creating New Time Off Requests",
+    "Permission:TimeOffRequests.EditAny": "Editing Any Time Off Requests",
+    "Permission:TimeOffRequests.EditOwn": "Editing Own Time Off Requests",
+    "Permission:TimeOffRequests.DeleteAny": "Deleting Any Time Off Requests",
+    "Permission:TimeOffRequests.DeleteOwn": "Deleting Own Time Off Requests",
+    "Permission:TimeOffRequests.Approve": "Approve Time Off Requests",
+    "Menu:EmployeeManagement": "Employee Management",
+    "Menu:TimeOffRequests": "Time Off Requests",
+    "Enum:TimeOffRequestStatus:0": "Submited",
+    "Enum:TimeOffRequestStatus:1": "Approved",
+    "Enum:TimeOffRequestStatus:2": "Denied"
+  }
+}
